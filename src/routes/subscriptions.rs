@@ -1,3 +1,4 @@
+//! src/routes/subscriptions.rs
 use actix_web::{web, HttpResponse};
 use chrono::Utc;
 use sqlx::PgPool;
@@ -9,10 +10,30 @@ pub struct FormData {
     email: String,
 }
 
+#[tracing::instrument(
+    name = "Adding a new subscriber.",
+    skip(form, pool),
+    fields(
+        name = %form.name,
+        email = %form.email
+    )
+)]
 pub async fn subscribe(
     form: web::Form<FormData>,
     pool: web::Data<PgPool>,
 ) -> Result<HttpResponse, HttpResponse> {
+    insert_subscriber(&form, &pool)
+        .await
+        .map_err(|_| HttpResponse::InternalServerError().finish())?;
+
+    Ok(HttpResponse::Ok().finish())
+}
+
+#[tracing::instrument(
+    name = "Saving new subscriber details into the database",
+    skip(form, pool)
+)]
+pub async fn insert_subscriber(form: &FormData, pool: &PgPool) -> Result<(), sqlx::Error> {
     sqlx::query!(
         r#"
         INSERT INTO subscriptions (id, email, name, subscribed_at)
@@ -23,12 +44,12 @@ pub async fn subscribe(
         form.name,
         Utc::now()
     )
-    // We got rid of the double wrapping using .app_data()
-    .execute(pool.get_ref())
+    .execute(pool)
     .await
     .map_err(|e| {
-        eprintln!("Failed to execute query {}", e);
-        HttpResponse::InternalServerError().finish()
+        tracing::error!("Failed to execute query: {:?}", e);
+        e
     })?;
-    Ok(HttpResponse::Ok().finish())
+
+    Ok(())
 }

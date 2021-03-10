@@ -1,3 +1,4 @@
+#! Cargo.toml
 [package]
 name = "zero2prod"
 version = "0.1.0"
@@ -14,7 +15,8 @@ path = "src/main.rs"
 name = "zero2prod"
 
 [dependencies]
-actix-web = { git = "https://github.com/actix/actix-web.git" }
+# actix-web = { git = "https://github.com/actix/actix-web.git" }
+actix-web = "4.0.0-beta.4"
 config = "0.10.1"
 # We need the optional `derive` feature to use `serde`'s procedural macros:
 # `#[derive(Serialize)]` and `#[derive(Deserialize)]`.
@@ -23,6 +25,12 @@ config = "0.10.1"
 serde = { version = "1", features = ["derive"] }
 uuid = { version = "0.8.1", features = ["v4"] }
 chrono = "0.4.15"
+tracing = "0.1.25"
+tracing-futures = "0.2.5"
+tracing-subscriber = { version = "0.2.12", features = ["registry", "env-filter" ] }
+tracing-bunyan-formatter = "0.1.7"
+tracing-log = "0.1.2"
+tracing-actix-web = "0.3.0-beta.2"
 
 # Using table-like toml syntax to avoid a super-long line!
 [dependencies.sqlx]
@@ -34,10 +42,12 @@ features = [
     "postgres",
     "uuid",
     "chrono",
-    "migrate"
+    "migrate",
+    "offline"
     ]
 
 [dev-dependencies]
 actix-rt = "2"
+lazy_static = "1.4.0"
 reqwest = "0.11"
 tokio = "1"
